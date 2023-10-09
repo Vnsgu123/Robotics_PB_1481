@@ -1,0 +1,1579 @@
+
+1===
+create table BillDetails(
+BillNo INT,
+ItemCode varchar(30),
+Price INT,
+Qty INT,
+Sum INT)
+
+
+create or replace trigger calculate_sum
+before insert on BillDetails
+for each row
+begin
+:new.Sum := :new.Price * :new.Qty;
+end;
+
+select * from BillDetails
+
+insert into BillDetails values(1,'a',100,2,null)
+insert into BillDetails values(2,'b',200,6,null)
+insert into BillDetails values(3,'c',100,0,null)
+insert into BillDetails values(4,'d',100,-3,null)
+
+
+2222====
+
+
+create table MarkTable(
+roll int,
+Sub1  int,
+Sub2 int, 
+Sub3 int, 
+Percentage int,
+grade char)
+
+
+create or replace trigger calculate_grade
+before insert on MarkTable
+for each row 
+begin
+if :new.sub1<40 or :new.sub2<40 or :new.sub3<40 then
+       :new.grade:='fail';
+       :new.percentage :=0;
+else
+       :new.percentage := (:new.sub1+:new.sub2+:new.sub3)/3;
+        if :new.percentage >= 70 then
+                 :new.grade:='Distinction';
+        end if; 
+        if :new.percentage >= 70 then
+                 :new.grade:='Distinction';
+       end if;       
+       if :new.percentage >= 60 and :new.percentage < 70 then
+                 :new.grade:='First';
+       end if;       
+       if :new.percentage >= 50 and :new.percentage < 59 then
+                 :new.grade:='second';
+       end if; 
+       if :new.percentage >= 40 and :new.percentage < 49 then
+                 :new.grade:='third';
+       end if;
+       if :new.percentage < 40 then
+                 :new.grade:='fail';
+       end if;
+end if;
+end;
+ 
+alter table MarkTable modify (grade char(10)) 
+
+select * from MarkTable
+insert into MarkTable values(1,39,56,55,null,null)
+insert into MarkTable values(2,41,42,43,null,null)
+
+-----------------------------------------------------------------------------------------------------------------
+3
+CREATE TABLE Bill(BillNo INT PRIMARY KEY,
+BillDate date,
+BillAmount int,
+Discount int,
+NetPayment int)
+
+create or replace trigger bill_cal
+before insert on Bill
+for each row
+begin
+if :new.BillAmount <= 1000 then 
+   :new.Discount := 5;
+   :new.NetPayment := (:new.BillAmount - (:new.BillAmount * 5)/100);
+end if;
+
+if :new.BillAmount > 1000 and :new.BillAmount < 10000 then 
+   :new.Discount := 10;
+   :new.NetPayment := (:new.BillAmount - (:new.BillAmount * 10)/100);
+end if;
+
+if :new.BillAmount >= 10000  then 
+   :new.Discount := 20;
+   :new.NetPayment := (:new.BillAmount - (:new.BillAmount * 20)/100);
+end if;
+
+end;
+
+
+insert into Bill values(1,'11-jan-2020',500,null,null)
+insert into Bill values(2,'11-jan-2020',5000,null,null)
+insert into Bill values(3,'11-jan-2020',5000,null,null)
+insert into Bill values(4,'11-jan-2020',1000,null,null)
+insert into Bill values(5,'11-jan-2020',10000,null,null)
+
+select * from Bill
+
+--------------------------------------------------------------------------------------------------------------------
+4
+
+
+create table CityMaster
+(CityCode int,
+CityName char(20),
+CityCategory char(5))
+
+
+
+create table EmployeeMaster(
+EmpCode int primary key,
+EmpName char(20),
+EmpAge int,
+CityCode int,
+BASIC int,
+HRA int,
+DA int,
+GROSS int)
+
+create or replace trigger emp
+before insert on EmployeeMaster 
+for each row
+
+declare
+ ccat char(10);
+
+begin
+
+select CityCategory into ccat from CityMaster where CityCode = :new.CityCode;
+dbms_output.put(ccat);
+
+IF ccat = 'A' then
+
+     :new.HRA := 10;
+     :new.DA := 40;
+     :new.GROSS := (:new.BASIC  + ((:new.BASIC*42)/100) + ((:new.BASIC*10)/100));
+END IF;
+
+
+if ccat = 'B' then
+
+     :new.HRA := 15;
+     :new.DA := 40;
+     :new.GROSS := (:new.BASIC  + ((:new.BASIC*42)/100) + ((:new.BASIC*15)/100));
+END IF;
+
+if ccat = 'C' then
+
+     :new.HRA := 20;
+     :new.DA := 42;
+     :new.GROSS := (:new.BASIC  + ((:new.BASIC*42)/100) + ((:new.BASIC*20)/100));
+END IF;
+end;
+
+
+insert into CityMaster values(1,'gandhinagar','B')
+insert into CityMaster values(2,'rajkot','C')
+insert into CityMaster values(3,'vadodara','C')
+insert into CityMaster values(4,'bhavnagar','B')
+insert into CityMaster values(5,'jamnagar','A')
+insert into CityMaster values(6,'navsari','A')
+
+select * from CityMaster
+
+insert into EmployeeMaster values(1,'nambi',50,2,500000,null,null,null)
+insert into EmployeeMaster values(2,'vikram',50,1,500000,null,null,null)
+insert into EmployeeMaster values(3,'homi',50,2,500000,null,null,null)
+insert into EmployeeMaster values(4,'kalam',50,6,500000,null,null,null)
+
+select * from EmployeeMaster
+
+-------------------------------------------------------------------------------------------------------------------
+5
+create table CategoryMaster(
+CategoryID int,
+CategoryName char(10))
+
+create table ItemMaster( 
+ItemCode int,
+ItemName char(10),
+ItemPrice int,
+ItemQTY int,
+CategoryID int)
+
+create or replace trigger del_items
+before delete on CategoryMaster
+for each row 
+begin
+delete from ItemMaster where CategoryID = :old.CategoryID;
+end;
+
+
+insert into CategoryMaster values (1,'shoes')
+insert into CategoryMaster values (2,'clothes')
+insert into CategoryMaster values (3,'electronic')
+insert into CategoryMaster values (4,'fashion')
+
+insert into ItemMaster values (1,'jordans',1000,1,1)
+insert into ItemMaster values (2,'shirts',1000,1,2)
+insert into ItemMaster values (3,'cap',1000,1,4);
+insert into ItemMaster values (4,'mobile',1000,1,3);
+insert into ItemMaster values (5,'lebron',1000,1,1);
+insert into ItemMaster values (6,'t-shirt',1000,1,2);
+insert into ItemMaster values (7,'googles',1000,1,4)
+insert into ItemMaster values (8,'fan',1000,1,3)
+
+select * from ItemMaster
+select * from CategoryMaster
+
+delete from CategoryMaster where CategoryID = 3
+
+---------------------------------------------------------------------------------------------------------------------
+6
+create table BillMaster
+(SrNo int, BillDate date, CustomerCode int, BillNo int , BillAmount int)
+
+insert into BillMaster values(1,12-jan-2018,11,1,1000)
+insert into BillMaster values(1,'12-jan-2018',11,1,1000)
+insert into BillMaster values(2,'12-jan-2019',11,2,1000)
+insert into BillMaster values(3,'12-jan-2020',11,3,1000)
+insert into BillMaster values(4,'12-jan-2018',12,1,1000)
+insert into BillMaster values(5,'12-jan-2019',12,2,1000)
+insert into BillMaster values(6,'12-jan-2020',14,1,1000)
+
+
+
+create or replace function bill_cal 
+(v1 in date,
+v2 in date,
+v3 in int
+)
+return number is o3 number:=0;
+begin
+
+select sum(BILLAMOUNT) into o3 from BillMaster where CUSTOMERCODE = v3 and BILLDATE between v1 and v2;
+return o3;
+end;
+
+
+
+DECLARE    
+     n3 int;    
+BEGIN  
+  
+    n3 := bill_cal('12-JAN-17','28-JAN-21', 11);    
+    dbms_output.put_line('Total Amount is: ' || n3);    
+END;    
+----------------------------------------------------------------------------------------------------------
+7
+
+
+
+create table billMast(SrNo int, BillDate date, CustomerCode int, BillNo int, BillAmount int, AmountPaid int)
+
+
+insert into billMast values(1,'12-jan-19',11,1,1000,500)
+insert into billMast values(1,'12-jan-19',11,1,1000,500)
+insert into billMast values(1,'12-jan-19',11,1,1000,500)
+insert into billMast values(1,'12-jan-19',11,1,1000,500)
+insert into billMast values(1,'12-jan-19',11,1,1000,500)
+insert into billMast values(1,'12-jan-19',11,1,1000,500)
+insert into billMast values(1,'12-jan-19',11,1,1000,500)
+
+
+
+select * from BillMast
+
+
+
+create or replace function Due_amt(
+v1 in date,
+v2 in date
+)
+return number is o3 number := 0 ;
+begin
+select sum(BillAmount - AmountPaid) into o3 from billMast where BillDate between  v1 and v2 ; 
+return o3;
+end;
+
+
+declare 
+n number :=0;
+begin
+n := Due_amt('10-JAN-18','14-JAN-19');
+dbms_output.put_line('amount left is '|| n);
+end;
+------------------------------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------------------------------
+8
+
+create table StudentMaster(StudentID int,StudentFirstName char(20),StudentLastName char(20),StudentCategory char(20),BirthDate date,SemesterNo int, CityCode int)
+
+create table CityMasterr(CityCode int, CityName char(20))
+
+create or replace procedure TotalStudentCountCategorywise
+(v1 in char,
+o1 out number)
+is
+begin
+select count(*) into o1 from StudentMaster where StudentCategory = v1;
+end;
+select count(*) from StudentMaster where StudentCategory = 'open';
+
+create or replace procedure TotalSpeicifcSurname
+(v1 in char,
+o1 out int)
+is 
+begin
+select count(*) AS tttt into o1 from Studentmaster where StudentLastName = v1;
+dbms_output.put_line(v1);
+dbms_output.put_line(o1);
+end;
+
+
+declare
+v2 int;
+begin
+TotalSpeicifcSurname('bhabha',v2);
+dbms_output.put_line('total  ='||v2);
+end;
+
+declare
+v2 number;
+begin
+TotalStudentCountCategorywise('open',v2);
+dbms_output.put_line('total  ='||v2);
+end;
+
+select * from StudentMaster
+insert into StudentMaster values (1,'nambi','narayan','open','12-jan-1949',5,1)
+insert into StudentMaster values (2,'vikram','sarabhai','obc','12-jan-1951',5,1)
+insert into StudentMaster values (3,'homi','bhabha','open','12-jan-1951',5,1)
+insert into StudentMaster values (4,'neel','bhabha','open','12-jan-1953',5,1)
+insert into StudentMaster values (3,'abdul','kalam','obc','12-jan-1951',5,1)
+
+
+------------------------------------------------------------------------------------------------------
+9
+CREATE TABLE ItemMasterff(SrNo INT, ItemCode INT, ItemName VARCHAR(50), ItemPrice INT, onHand INT);
+
+INSERT INTO ItemMasterff VALUES(1, 11, 'apple', 50, 10);
+INSERT INTO ItemMasterff VALUES(3, 12, 'mango', 50, 100);
+INSERT INTO ItemMasterff VALUES(4, 13, 'chickoo', 50, 20);
+INSERT INTO ItemMasterff VALUES(5, 14, 'apple', 50, 70);
+INSERT INTO ItemMasterff VALUES(6, 15, 'banana', 50, 10);
+
+CREATE OR REPLACE FUNCTION highQty
+RETURN NUMBER IS
+   o3 NUMBER := 0;
+BEGIN
+   SELECT ItemCode INTO o3
+   FROM ItemMasterff
+   WHERE onHand = (SELECT MAX(onHand) FROM ItemMasterff);
+   
+   RETURN o3;
+END;
+
+DECLARE
+   n NUMBER := 0;
+BEGIN
+   n := highQty();
+   DBMS_OUTPUT.PUT_LINE('highest qty is ' || n);
+END;
+
+
+------------------------------------------------------------------------------------------------------
+10
+
+create table HotelMaster(HotelCode int, HotelName varchar(20), HotelRatingID int, Telephone int, CityCode int , Address varchar(20),
+Webiste varchar(20))
+
+create table CityMaster1(CityCode int, CityName varchar(20))
+
+create table HotelRatingMaster(HotelRatingID int, HotelRatingName varchar(20))
+
+
+
+INSERT INTO CityMaster1 VALUES(111, 'Surat')
+INSERT INTO CityMaster1 VALUES(222, 'Ahmedabad')
+INSERT INTO CityMaster1 VALUES(333, 'Mumbai')
+
+
+
+INSERT INTO HotelRatingMaster VALUES(9999, '3-Star')
+INSERT INTO HotelRatingMaster VALUES(8888, '4-Star')
+INSERT INTO HotelRatingMaster VALUES(7777, '5-Star')
+INSERT INTO HotelRatingMaster VALUES(6666, '4-Star')
+INSERT INTO HotelRatingMaster VALUES(5555, '3-Star')
+INSERT INTO HotelRatingMaster VALUES(4444, '5-Star')
+
+
+
+INSERT INTO HotelMaster VALUES(1, 'Hotel_1', 9999, 1111111111, 111,'antartica','www.hotel.com')
+INSERT INTO HotelMaster VALUES(2, 'Hotel_2', 7777, 777423327, 111,'antartica','www.hotel.com')
+INSERT INTO HotelMaster VALUES(3, 'Hotel_3', 8888, 884324288, 111,'antartica','www.hotel.com')
+INSERT INTO HotelMaster VALUES(4, 'Hotel_4', 6666, 6663426, 222,'antartica','www.hotel.com')
+INSERT INTO HotelMaster VALUES(5, 'Hotel_5', 4444, 44434224, 333,'antartica','www.hotel.com')
+INSERT INTO HotelMaster VALUES(6, 'Hotel_6', 5555, 55422455, 333,'antartica','www.hotel.com')
+INSERT INTO HotelMaster VALUES(7, 'Hotel_7', 6666, 64222666, 222,'antartica','www.hotel.com')
+
+
+
+
+
+create or replace procedure hotrldetails
+(v1 in varchar,
+ v2 in varchar,
+ o1 out varchar
+)
+as
+cursor hot is select HotelName from HotelMaster where HotelRatingID in (select HotelRatingID from HotelRatingMaster where HotelRatingName = v2) and CityCode in (select CityCode from CityMaster1 where CityName = v1);
+begin
+open hot;
+loop 
+fetch hot into o1;
+exit when hot%notfound;
+end loop;
+close hot;
+end;
+
+declare
+ o1 varchar(50);
+begin
+hotrldetails('Surat','3-Star',o1);
+dbms_output.put_line('hotel names = '||o1);
+end;
+ 
+
+select * from CityMaster1
+select * from HotelRatingMaster
+select * from HotelMaster
+
+
+------------------------------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------------------------------
+
+
+create table DealerMaster (Dealercode int,Dealername varchar(20),citycode int,address varchar(20),telephone int, mobile  int)
+
+create table salesInformation(year int , month int,Dealercode int,salesamount int)
+
+create table citymasters (citycode int , cityname varchar(20))
+
+create or replace procedure getsales
+(
+v1 in varchar,
+v2 in int,
+o1 out int
+)
+as
+begin
+
+select sum(salesamount) into o1 from salesInformation where Dealercode in (select Dealercode from DealerMaster where citycode in (select citycode from citymasters where cityname = v1 )) and year = v2;
+
+
+end;
+
+
+declare
+o1 int;
+begin
+getsales('ahmedabad',2020,o1);
+dbms_output.put_line('total sales '||o1);
+end;
+
+insert into citymasters values (1,'ahmedabad')
+insert into citymasters values (2,'surat')
+insert into citymasters values (3,'rajkot')
+insert into citymasters values (4,'vadodara')
+
+
+insert into salesInformation values (2020,'january',11,1000)
+insert into salesInformation values (2020,'july',11,6000)
+insert into salesInformation values (2021,'january',12,1000)
+insert into salesInformation values (2021,'june',14,7000)
+insert into salesInformation values (2022,'december',11,1000)
+insert into salesInformation values (2022,'january',13,6000)
+insert into salesInformation values (2022,'january',14,8000)
+
+insert into DealerMaster values (11,'homi',1,'bapunagar',22123434,873279929)
+insert into DealerMaster values (12,'sarabhai',1,'nikol',22123434,873279929)
+insert into DealerMaster values (12,'nambi',2,'palsana',22123434,873279929)
+insert into DealerMaster values (13,'kalam',2,'pal',22123434,873279929)
+insert into DealerMaster values (14,'raman',3,'revdi',22123434,873279929)
+insert into DealerMaster values (15,'bose',4,'gas circle',22123434,873279929)
+
+select * from citymasters
+select * from DealerMaster
+
+-----------------------------------------------asingment-2-------------------------------------------------
+
+create table studentresult (studentid int , sem int,sub1 int,sub2 int,sub3 int,sub4 int,sub5 int,percentage int,grade varchar(10),courseid int)
+
+create table studentresult (studentid int , sem int,sub1 int,sub2 int,sub3 int,sub4 int,sub5 int,percentage int,grade varchar(10),courseid int)
+
+
+create or replace procedure getinfo
+(
+v1 in int,
+o1 out studentresult%rowtype
+)
+as
+cursor mycur is select * from studentresult where studentid = v1;
+begin
+open mycur;
+loop
+fetch mycur into o1;
+exit when mycur%notfound;
+end loop;
+end;
+
+declare 
+o1 studentresult%rowtype;
+begin
+getinfo(1,o1);
+dbms_output.put_line(o1);
+end;
+
+
+
+create or replace procedure countstudents
+(v1 in int,
+o1 out int
+)
+as
+begin
+
+select count(*) into o1 from studentresult where courseid = v1 and grade = 'not appeared';
+end;
+
+
+declare 
+o1 int;
+begin
+countstudents(11,o1);
+dbms_output.put_line(o1);
+end;
+
+
+
+create or replace procedure countgrade
+(v1 in varchar2,
+o1 out studentresult%rowtype
+)
+as
+cursor mycurr is select * from studentresult where grade = v1;
+begin
+open mycurr;
+loop
+
+fetch mycurr into o1;
+
+exit when mycurr%notfound;
+end loop;
+end;
+
+
+declare 
+o1 studentresult%rowtype;
+begin
+countgrade('A',o1);
+dbms_output.put_line(o1);
+end;
+----------------------------------------------------------\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+create table studentresult (studentid int , sem int,sub1 int,sub2 int,sub3 int,sub4 int,sub5 int,percentage int,grade varchar(10),courseid int)
+
+alter table studentresult
+add coursename varchar(20)
+
+desc studentresult
+
+create or replace procedure getinfo
+(
+v1 in int,
+o1 out studentresult%rowtype
+)
+as
+cursor mycur is select * from studentresult where studentid = v1;
+begin
+open mycur;
+loop
+fetch mycur into o1;
+exit when mycur%notfound;
+end loop;
+end;
+
+declare 
+o1 studentresult%rowtype;
+begin
+getinfo(1,o1);
+dbms_output.put_line(o1);
+end;
+
+---------------------------------------------------------------------------------------------------
+2
+
+create or replace procedure countstudents
+(v1 in int,
+o1 out int
+)
+as
+begin
+
+select count(*) into o1 from studentresult where courseid = v1 and grade <> 'not appeared';
+end;
+
+
+declare 
+o1 int;
+begin
+countstudents(11,o1);
+dbms_output.put_line(o1);
+end;
+
+---------------------------------------------------------------------------------------------------
+3
+
+create or replace procedure countstudents
+(v1 in varchar,
+o1 out int
+)
+as
+begin
+
+select count(*) into o1 from studentresult where coursename = v1 and grade <> 'not appeared';
+end;
+
+
+declare 
+o1 int;
+begin
+countstudents('rdbms',o1);
+dbms_output.put_line(o1);
+end;
+---------------------------------------------------------------------------------------------------
+4
+
+create or replace procedure countgrade
+(v1 in varchar2,
+o1 out studentresult%rowtype
+)
+as
+cursor mycurr is select * from studentresult where grade = v1;
+begin
+open mycurr;
+loop
+
+fetch mycurr into o1;
+
+exit when mycurr%notfound;
+end loop;
+end;
+
+
+declare 
+o1 studentresult%rowtype;
+begin
+countgrade('A',o1);
+dbms_output.put_line(o1);
+end;
+
+---------------------------------------------------------------------------------------------------
+5
+
+
+
+create or replace procedure countsemester
+(v1 in int,
+o1 out studentresult%rowtype
+)
+as
+cursor mycurr is select * from studentresult where sem = v1;
+begin
+open mycurr;
+loop
+
+fetch mycurr into o1;
+
+exit when mycurr%notfound;
+end loop;
+end;
+
+
+declare 
+o1 studentresult%rowtype;
+begin
+countsemester(5,o1);
+dbms_output.put_line(o1);
+end;
+
+---------------------------------------------------------------------------------------------------
+6
+
+
+create or replace procedure countsemesterGrade
+(v1 in int,
+v2 in varchar2,
+o1 out studentresult%rowtype
+)
+as
+cursor mycurr is select * from studentresult where sem = v1 and grade = v2;
+begin
+open mycurr;
+loop
+
+fetch mycurr into o1;
+
+exit when mycurr%notfound;
+end loop;
+end;
+
+
+declare 
+o1 studentresult%rowtype;
+begin
+countsemester(5,'A',o1);
+dbms_output.put_line(o1);
+end;
+
+
+---------------------------------------------------------------------------------------------------
+7
+
+create or replace procedure countsemesterGradecourse
+(v1 in int,
+v2 in varchar,
+v3 in varchar,
+o1 out studentresult%rowtype
+)
+as
+cursor mycurr is select * from studentresult where sem = v1 and grade = v2 and coursename = v3;
+begin
+open mycurr;
+loop
+
+fetch mycurr into o1;
+
+exit when mycurr%notfound;
+end loop;
+end;
+
+
+declare 
+o1 studentresult%rowtype;
+begin
+countsemester(5,'A','rdbms'o1);
+dbms_output.put_line(o1);
+end;
+
+
+---------------------------------------------------------------------------------------------------
+8
+
+
+create or replace procedure countsemesterN
+(v1 in int,
+o1 out  int
+)
+as
+begin
+select count(*) into o1 from studentresult where sem = v1;
+end;
+
+
+declare 
+o1 int;
+begin
+countsemesterN(5,o1);
+dbms_output.put_line(o1);
+end;
+
+---------------------------------------------------------------------------------------------------
+9
+
+create or replace procedure countsemestergradeN
+(v1 in int,
+v2 in varchar,
+o1 out  int
+)
+as
+begin
+select count(*) into o1 from studentresult where sem = v1 and grade = v2;
+end;
+
+
+declare 
+o1 int;
+begin
+countsemesterN(5,'A',o1);
+dbms_output.put_line(o1);
+end;
+
+---------------------------------------------------------------------------------------------------
+10
+
+create or replace procedure countpassfail
+(
+v1 in varchar,
+o1 out  int,
+o2 out  int
+)
+as
+begin
+select count(*) into o1 from studentresult where grade = 'fail';
+select count(*) into o2 from studentresult where grade <> 'fail';
+end;
+
+
+declare 
+o1 int;
+o2 int;
+begin
+countpassfail('rdbms',o1,o2);
+dbms_output.put_line(o1);
+dbms_output.put_line(o2);
+end;
+
+
+
+
+Consider following table:  
+studentresult (studentid int , sem int,sub1 int,sub2 int,sub3 int,sub4 int,sub5 int,percentage int,grade varchar(20),courseid int)
+
+
+1) Write Procedure that will display information of a particular STUDENTID.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+create table studentresult (studentid int , sem int,sub1 int,sub2 int,sub3 int,sub4 int,sub5 int,percentage int,grade varchar(10),courseid int)
+
+
+insert into studentresult values (1,5,'30','50','70','66','50',null,null,11,'bsc_it')
+insert into studentresult values (1,5,'30','50','70','66','50',null,null,11,'Msc_it')
+insert into studentresult values (2,5,'90','80','70','96','70',null,null,11,'bsc_it')
+insert into studentresult values (3,5,-1,-1,-1,-1,-1,null,null,11,'bsc_it')
+insert into studentresult values (1,5,'30','50','70','66','50',null,null,11)
+insert into studentresult values (1,5,'30','50','70','66','50',null,null,11)
+insert into studentresult values (1,5,'30','50','70','66','50',null,null,11)
+insert into studentresult values (1,5,'30','50','70','66','50',null,null,11)
+insert into studentresult values (1,5,'30','50','70','66','50',null,null,11)
+
+
+alter table studentresult
+modify grade varchar(20)
+
+select * from studentresult
+desc studentresult
+
+delete from studentresult where studentid = 1 
+
+
+create or replace trigger calculate_grade_percentage
+before insert on studentresult
+for each row 
+begin
+if :new.sub1<40 or :new.sub2<40 or :new.sub3<40 or :new.sub4<40 or :new.sub5<40 then
+       if :new.sub1 = -1 and :new.sub2 = -1 and :new.sub3 = -1 and :new.sub4 = -1 and :new.sub5 = -1 then
+              :new.grade:='not appeared';
+              :new.percentage :=0;
+       else
+              :new.grade:='fail';
+              :new.percentage :=0;
+       end if;
+else
+       :new.percentage := (:new.sub1+:new.sub2+:new.sub3+:new.sub4+:new.sub5)/5;
+        if :new.percentage >= 70 then
+                 :new.grade:='Distinction';
+        end if; 
+        if :new.percentage >= 70 then
+                 :new.grade:='Distinction';
+       end if;       
+       if :new.percentage >= 60 and :new.percentage < 70 then
+                 :new.grade:='First';
+       end if;       
+       if :new.percentage >= 50 and :new.percentage < 59 then
+                 :new.grade:='second';
+       end if; 
+       if :new.percentage >= 40 and :new.percentage < 49 then
+                 :new.grade:='third';
+       end if;
+       if :new.percentage < 40 then
+                 :new.grade:='fail';
+       end if;
+end if;
+end;
+
+create or replace procedure getinfo
+(
+v1 in int,
+o1 out studentresult%rowtype
+)
+as
+cursor mycur is select * from studentresult where studentid = v1;
+begin
+open mycur;
+loop
+fetch mycur into o1;
+dbms_output.put_line (o1.studentid||'  '||o1.sem);
+exit when mycur%notfound;
+
+end loop;
+end;
+
+declare 
+o1 studentresult%rowtype;
+begin
+getinfo(1,o1);
+end;
+
+
+
+create or replace procedure countstudents
+(v1 in int,
+o1 out int
+)
+as
+begin
+
+select count(*) into o1 from studentresult where courseid = v1 and grade = 'not appeared';
+end;
+
+
+declare 
+o1 int;
+begin
+countstudents(11,o1);
+dbms_output.put_line(o1);
+end;
+
+
+
+create or replace procedure countgrade
+(v1 in varchar2,
+o1 out studentresult%rowtype
+)
+as
+cursor mycurr is select * from studentresult where grade = v1;
+begin
+open mycurr;
+loop
+
+fetch mycurr into o1;
+
+exit when mycurr%notfound;
+end loop;
+end;
+
+
+declare 
+o1 studentresult%rowtype;
+begin
+countgrade('A',o1);
+dbms_output.put_line(o1);
+end;
+
+
+
+create or replace procedure countsemester
+(v1 in int,
+o1 out studentresult%rowtype
+)
+as
+cursor mycurr is select * from studentresult where sem = v1;
+begin
+open mycurr;
+loop
+
+fetch mycurr into o1;
+
+exit when mycurr%notfound;
+end loop;
+end;
+
+
+declare 
+o1 studentresult%rowtype;
+begin
+countsemester(5,o1);
+dbms_output.put_line(o1);
+end;
+
+
+create or replace procedure countsemesterGrade
+(v1 in int,
+v2 in varchar2,
+o1 out studentresult%rowtype
+)
+as
+cursor mycurr is select * from studentresult where sem = v1 and grade = v2;
+begin
+open mycurr;
+loop
+
+fetch mycurr into o1;
+
+exit when mycurr%notfound;
+end loop;
+end;
+
+
+declare 
+o1 studentresult%rowtype;
+begin
+countsemester(5,'A',o1);
+dbms_output.put_line(o1);
+end;
+
+create or replace procedure countsemesterGradecourse
+(v1 in int,
+v2 in varchar,
+v3 in varchar,
+o1 out studentresult%rowtype
+)
+as
+cursor mycurr is select * from studentresult where sem = v1 and grade = v2 and coursename = v3;
+begin
+open mycurr;
+loop
+
+fetch mycurr into o1;
+
+exit when mycurr%notfound;
+end loop;
+end;
+
+
+declare 
+o1 studentresult%rowtype;
+begin
+countsemester(5,'A','rdbms'o1);
+dbms_output.put_line(o1);
+end;
+
+
+
+create or replace procedure countsemesterN
+(v1 in int,
+o1 out  int
+)
+as
+begin
+select count(*) into o1 from studentresult where sem = v1;
+end;
+
+
+declare 
+o1 int;
+begin
+countsemesterN(5,o1);
+dbms_output.put_line(o1);
+end;
+
+create or replace procedure countsemesterGradeN
+(v1 in int,
+v2 in varchar,
+o1 out  int
+)
+as
+begin
+select count(*) into o1 from studentresult where sem = v1 and grade =v2;
+end;
+
+
+declare 
+o1 int;
+begin
+countsemesterN(5,'A',o1);
+dbms_output.put_line(o1);
+end;
+(((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((
+
+create table studentresult (studentid int , sem int,sub1 int,sub2 int,sub3 int,sub4 int,sub5 int,percentage int,grade varchar(10),courseid int)
+
+alter table studentresult
+add coursename varchar(20)
+
+desc studentresult
+
+create or replace procedure getinfo
+(
+v1 in int,
+o1 out studentresult%rowtype
+)
+as
+cursor mycur is select * from studentresult where studentid = v1;
+begin
+open mycur;
+loop
+fetch mycur into o1;
+exit when mycur%notfound;
+end loop;
+end;
+
+declare 
+o1 studentresult%rowtype;
+begin
+getinfo(1,o1);
+dbms_output.put_line(o1);
+end;
+
+
+
+create or replace procedure countstudents
+(v1 in int,
+o1 out int
+)
+as
+begin
+
+select count(*) into o1 from studentresult where courseid = v1 and grade = 'not appeared';
+end;
+
+
+declare 
+o1 int;
+begin
+countstudents(11,o1);
+dbms_output.put_line(o1);
+end;
+
+
+
+create or replace procedure countgrade
+(v1 in varchar2,
+o1 out studentresult%rowtype
+)
+as
+cursor mycurr is select * from studentresult where grade = v1;
+begin
+open mycurr;
+loop
+
+fetch mycurr into o1;
+
+exit when mycurr%notfound;
+end loop;
+end;
+
+
+declare 
+o1 studentresult%rowtype;
+begin
+countgrade('A',o1);
+dbms_output.put_line(o1);
+end;
+
+
+
+create or replace procedure countsemester
+(v1 in int,
+o1 out studentresult%rowtype
+)
+as
+cursor mycurr is select * from studentresult where sem = v1;
+begin
+open mycurr;
+loop
+
+fetch mycurr into o1;
+
+exit when mycurr%notfound;
+end loop;
+end;
+
+
+declare 
+o1 studentresult%rowtype;
+begin
+countsemester(5,o1);
+dbms_output.put_line(o1);
+end;
+
+
+create or replace procedure countsemesterGrade
+(v1 in int,
+v2 in varchar2,
+o1 out studentresult%rowtype
+)
+as
+cursor mycurr is select * from studentresult where sem = v1 and grade = v2;
+begin
+open mycurr;
+loop
+
+fetch mycurr into o1;
+
+exit when mycurr%notfound;
+end loop;
+end;
+
+
+declare 
+o1 studentresult%rowtype;
+begin
+countsemester(5,'A',o1);
+dbms_output.put_line(o1);
+end;
+
+create or replace procedure countsemesterGradecourse
+(v1 in int,
+v2 in varchar,
+v3 in varchar,
+o1 out studentresult%rowtype
+)
+as
+cursor mycurr is select * from studentresult where sem = v1 and grade = v2 and coursename = v3;
+begin
+open mycurr;
+loop
+
+fetch mycurr into o1;
+
+exit when mycurr%notfound;
+end loop;
+end;
+
+
+declare 
+o1 studentresult%rowtype;
+begin
+countsemester(5,'A','rdbms'o1);
+dbms_output.put_line(o1);
+end;
+
+
+
+create or replace procedure countsemesterN
+(v1 in int,
+o1 out  int
+)
+as
+begin
+select count(*) into o1 from studentresult where sem = v1;
+end;
+
+
+declare 
+o1 int;
+begin
+countsemesterN(5,o1);
+dbms_output.put_line(o1);
+end;
+
+
+create or replace procedure countsemestergradeN
+(v1 in int,
+v2 in varchar,
+o1 out  int
+)
+as
+begin
+select count(*) into o1 from studentresult where sem = v1 and grade = v2;
+end;
+
+
+declare 
+o1 int;
+begin
+countsemesterN(5,'A',o1);
+dbms_output.put_line(o1);
+end;
+
+create or replace procedure countpassfail
+(
+v1 in varchar,
+o1 out  int,
+o2 out  int
+)
+as
+begin
+select count(*) into o1 from studentresult where grade = 'fail';
+select count(*) into o2 from studentresult where grade <> 'fail';
+end;
+
+
+declare 
+o1 int;
+o2 int;
+begin
+countpassfail('rdbms',o1,o2);
+dbms_output.put_line(o1);
+dbms_output.put_line(o2);
+end;
+---------------------------final-------------------------final--------------------final----------------------------
+
+
+-------------------------------------------------
+
+
+create table studentresult (studentid int , sem int,sub1 int,sub2 int,sub3 int,sub4 int,sub5 int,percentage int,grade varchar(10),courseid int)
+
+alter table studentresult
+add coursename varchar(20)
+
+
+insert into studentresult values (1,5,'30','50','70','66','50',null,null,11,'bsc_it')
+insert into studentresult values (1,5,'30','50','70','66','50',null,null,11,'Msc_it')
+insert into studentresult values (2,5,'90','80','70','96','70',null,null,11,'bsc_it')
+insert into studentresult values (3,5,-1,-1,-1,-1,-1,null,null,11,'bsc_it')
+insert into studentresult values (1,5,'30','50','70','66','50',null,null,11)
+insert into studentresult values (1,5,'30','50','70','66','50',null,null,11)
+insert into studentresult values (1,5,'30','50','70','66','50',null,null,11)
+insert into studentresult values (1,5,'30','50','70','66','50',null,null,11)
+insert into studentresult values (1,5,'30','50','70','66','50',null,null,11)
+
+
+alter table studentresult
+modify grade varchar(20)
+
+select * from studentresult
+desc studentresult
+
+delete from studentresult where studentid = 1 
+
+
+desc studentresult
+
+select * from studentresult
+-----------------------------------------------------------------------
+1
+create or replace procedure getinfo
+(
+v1 in int,
+o1 out studentresult%rowtype
+)
+as
+cursor mycur is select * from studentresult where studentid = v1;
+begin
+open mycur;
+loop
+
+fetch mycur into o1;
+
+exit when mycur%notfound;
+end loop;
+dbms_output.put_line ('student-id'||o1.studentid||'  semester'||o1.sem);
+end;
+
+declare 
+o1 studentresult%rowtype;
+begin
+getinfo(1,o1);
+
+end;
+------------------------------------------------
+2
+
+
+create or replace procedure countstudents
+(v1 in int,
+o1 out int
+)
+as
+begin
+
+select count(*) into o1 from studentresult where courseid = v1 and grade = 'not appeared';
+end;
+
+
+declare 
+o1 int;
+begin
+countstudents(11,o1);
+dbms_output.put_line(o1);
+end;
+-------------------------------------------------------
+3
+
+
+create or replace procedure countstudents
+(v1 in int,
+o1 out int
+)
+as
+begin
+
+select count(*) into o1 from studentresult where coursename = 'bsc-it' and grade = 'not appeared';
+end;
+
+
+declare 
+o1 int;
+begin
+countstudents(11,o1);
+dbms_output.put_line(o1);
+end;
+-------------------------------------------------------
+4
+
+
+create or replace procedure countgrade
+(v1 in varchar2,
+o1 out studentresult%rowtype
+)
+as
+cursor mycurr is select * from studentresult where grade = v1;
+begin
+open mycurr;
+loop
+
+fetch mycurr into o1;
+
+exit when mycurr%notfound;
+end loop;
+dbms_output.put_line ('student-id'||o1.studentid||'  semester'||o1.sem);
+end;
+
+
+declare 
+o1 studentresult%rowtype;
+begin
+countgrade('Distinction',o1);
+end;
+
+------------------------------------------------------------
+5
+
+
+create or replace procedure countsemester
+(v1 in int,
+o1 out studentresult%rowtype
+)
+as
+cursor mycurr is select * from studentresult where sem = v1;
+begin
+open mycurr;
+loop
+
+fetch mycurr into o1;
+dbms_output.put_line ('student-id'||o1.studentid||'  semester'||o1.sem);
+exit when mycurr%notfound;
+end loop;
+
+end;
+
+
+select * from studentresult
+
+declare 
+o1 studentresult%rowtype;
+begin
+countsemester(5,o1);
+
+end;
+
+-----------------------------------------------------------------------------------------------------
+6
+create or replace procedure countsemesterGrade
+(v1 in int,
+v2 in varchar2,
+o1 out studentresult%rowtype
+)
+as
+cursor mycurr is select * from studentresult where sem = v1 and grade = v2;
+begin
+open mycurr;
+loop
+fetch mycurr into o1;
+dbms_output.put_line ('student-id'||o1.studentid||'  semester'||o1.sem);
+exit when mycurr%notfound;
+end loop;
+end;
+
+
+declare 
+o1 studentresult%rowtype;
+begin
+countsemesterGrade(5,'Distinction',o1);
+end;
+---------------------------------------------------------------------------------------------
+7
+create or replace procedure countsemesterGradecourse
+(v1 in int,
+v2 in varchar,
+v3 in varchar,
+o1 out studentresult%rowtype
+)
+as
+cursor mycurr is select * from studentresult where sem = v1 and grade = v2 and coursename = v3;
+begin
+open mycurr;
+loop
+
+fetch mycurr into o1;
+dbms_output.put_line ('student-id'||o1.studentid||'  semester'||o1.sem);
+exit when mycurr%notfound;
+end loop;
+end;
+
+
+declare 
+o1 studentresult%rowtype;
+begin
+countsemesterGradecourse(5,'Distinction','bsc_it',o1);
+
+end;
+
+-------------------------------------------------------
+8
+select * from studentresult
+create or replace procedure countsemesterN
+(v1 in int,
+o1 out  int
+)
+as
+begin
+select count(*) into o1 from studentresult where sem = v1;
+end;
+
+
+declare 
+o1 int;
+begin
+countsemesterN(5,o1);
+dbms_output.put_line(o1);
+end;
+
+-----------------------------------------------------
+9
+create or replace procedure countsemestergradeN
+(v1 in int,
+v2 in varchar,
+o1 out  int
+)
+as
+begin
+select count(*) into o1 from studentresult where sem = v1 and grade = v2;
+end;
+
+
+declare 
+o1 int;
+begin
+countsemestergradeN(5,'Distinction',o1);
+dbms_output.put_line(o1);
+end;
+--------------------------------------------------------------
+10
+create or replace procedure countpassfail
+(
+v1 in varchar,
+o1 out  int,
+o2 out  int
+)
+as
+begin
+select count(*) into o1 from studentresult where grade = 'fail';
+select count(*) into o2 from studentresult where grade <> 'fail';
+end;
+
+
+declare 
+o1 int;
+o2 int;
+begin
+countpassfail('rdbms',o1,o2);
+dbms_output.put_line(o1);
+dbms_output.put_line(o2);
+end;
+
+select * from studentresult
+
+
+
+
